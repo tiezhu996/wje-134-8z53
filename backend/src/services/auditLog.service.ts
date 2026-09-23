@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { AuditLog } from '../models/auditLog.entity';
 import { AuditAction } from '../types/enums';
 import { AuthenticatedUser } from '../types/interfaces';
@@ -23,7 +23,11 @@ export class AuditLogService {
   ) {}
 
   async write(input: WriteAuditLogInput): Promise<AuditLog> {
-    const auditLog = this.auditLogRepository.create({
+    return this.writeWithManager(this.auditLogRepository.manager, input);
+  }
+
+  async writeWithManager(manager: EntityManager, input: WriteAuditLogInput): Promise<AuditLog> {
+    const auditLog = manager.getRepository(AuditLog).create({
       action: input.action,
       entityType: input.entityType,
       entityId: input.entityId ?? null,
@@ -34,6 +38,6 @@ export class AuditLogService {
       metadata: input.metadata ?? {}
     });
 
-    return this.auditLogRepository.save(auditLog);
+    return manager.getRepository(AuditLog).save(auditLog);
   }
 }

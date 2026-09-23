@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CostReport } from '../models/costReport.entity';
 import { ProjectBudget } from '../models/budget.entity';
-import { AuditAction, ReportPeriod, ReportType } from '../types/enums';
+import { AuditAction, BudgetStatus, ReportPeriod, ReportType } from '../types/enums';
 import { RequestContext } from '../types/interfaces';
 import { AuditLogService } from './auditLog.service';
 import { AnalyticsService } from './analytics.service';
@@ -36,6 +36,10 @@ export class ReportService {
     });
   }
 
+  async invalidateProjectCache(projectId: string): Promise<void> {
+    await this.redisService.deletePattern(`reports:${projectId}:*`);
+  }
+
   async generate(input: GenerateReportInput, context: RequestContext): Promise<CostReport> {
     const cacheKey = `reports:${input.projectId}:${input.period}:${input.reportType}`;
     const cached = await this.redisService.getJson<CostReport>(cacheKey);
@@ -44,7 +48,7 @@ export class ReportService {
     }
 
     const budgets = await this.budgetRepository.find({
-      where: { projectId: input.projectId },
+      where: { projectId: input.projectId, status: BudgetStatus.Approved },
       relations: ['costItems']
     });
     const costItems = budgets.flatMap((budget) => budget.costItems);

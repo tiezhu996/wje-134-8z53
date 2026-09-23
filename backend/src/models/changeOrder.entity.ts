@@ -1,5 +1,6 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { ChangeOrderStatus, ChangeType } from '../types/enums';
+import { ProjectBudget } from './budget.entity';
 
 @Entity({ name: 'change_orders' })
 export class ChangeOrder {
@@ -8,6 +9,13 @@ export class ChangeOrder {
 
   @Column({ name: 'project_id', type: 'uuid' })
   projectId: string;
+
+  @Column({ name: 'budget_id', type: 'uuid', nullable: true })
+  budgetId?: string | null;
+
+  @ManyToOne(() => ProjectBudget)
+  @JoinColumn({ name: 'budget_id' })
+  budget?: ProjectBudget;
 
   @Column({ type: 'enum', enum: ChangeType })
   changeType: ChangeType;
@@ -26,6 +34,9 @@ export class ChangeOrder {
 
   @Column({ name: 'application_reason', type: 'text' })
   applicationReason: string;
+
+  @Column({ name: 'submission_remark', type: 'text', nullable: true })
+  submissionRemark?: string | null;
 
   @Column({ type: 'enum', enum: ChangeOrderStatus, default: ChangeOrderStatus.Draft })
   status: ChangeOrderStatus;

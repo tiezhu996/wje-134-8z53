@@ -29,6 +29,11 @@ export class ProjectBudget {
   @Column({ name: 'reserved_amount', type: 'numeric', precision: 14, scale: 2, default: 0 })
   reservedAmount: string;
 
+  @Column({ name: 'occupied_amount', type: 'numeric', precision: 14, scale: 2, default: 0 })
+  occupiedAmount: string;
+
+  availableAmount?: string;
+
   @Column({ type: 'enum', enum: Currency, default: Currency.CNY })
   currency: Currency;
 
