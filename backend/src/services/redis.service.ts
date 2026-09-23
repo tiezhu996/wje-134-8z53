@@ -39,6 +39,31 @@ export class RedisService implements OnModuleDestroy {
     await this.client.set(key, JSON.stringify(value), 'EX', ttlSeconds);
   }
 
+  // 删除匹配前缀的缓存键，例如变更单审批通过后失效 reports:<projectId>:* 报表缓存
+  async deleteByPrefix(prefix: string): Promise<number> {
+    await this.ensureConnected();
+    let deleted = 0;
+    const stream = this.client.scanStream({ match: `${prefix}*`, count: 100 });
+    await new Promise<void>((resolve, reject) => {
+      stream.on('data', (keys: string[]) => {
+        if (keys.length > 0) {
+          stream.pause();
+          this.client
+            .del(...keys)
+            .then((count) => {
+              deleted += count;
+              stream.resume();
+            })
+            .catch(reject);
+        }
+      });
+      stream.on('end', () => resolve());
+      stream.on('error', reject);
+    });
+
+    return deleted;
+  }
+
   async onModuleDestroy(): Promise<void> {
     await this.client.quit();
   }

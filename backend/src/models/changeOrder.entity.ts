@@ -1,4 +1,13 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn
+} from 'typeorm';
+import { ProjectBudget } from './budget.entity';
 import { ChangeOrderStatus, ChangeType } from '../types/enums';
 
 @Entity({ name: 'change_orders' })
@@ -8,6 +17,14 @@ export class ChangeOrder {
 
   @Column({ name: 'project_id', type: 'uuid' })
   projectId: string;
+
+  // 关联的已审批预算：提交时从该预算预占额度，审批通过后并入总额
+  @Column({ name: 'budget_id', type: 'uuid' })
+  budgetId: string;
+
+  @ManyToOne(() => ProjectBudget, (budget) => budget.changeOrders, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'budget_id' })
+  budget: ProjectBudget;
 
   @Column({ type: 'enum', enum: ChangeType })
   changeType: ChangeType;
@@ -29,6 +46,10 @@ export class ChangeOrder {
 
   @Column({ type: 'enum', enum: ChangeOrderStatus, default: ChangeOrderStatus.Draft })
   status: ChangeOrderStatus;
+
+  // 预占额度不足被退回草稿时的说明，重新提交成功后清空
+  @Column({ name: 'return_reason', type: 'text', nullable: true })
+  returnReason?: string | null;
 
   @Column({ name: 'applicant_id', type: 'uuid' })
   applicantId: string;

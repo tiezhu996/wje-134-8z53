@@ -7,6 +7,7 @@ import {
   UpdateDateColumn
 } from 'typeorm';
 import { CostItem } from './costItem.entity';
+import { ChangeOrder } from './changeOrder.entity';
 import { BudgetStatus, Currency } from '../types/enums';
 
 @Entity({ name: 'project_budgets' })
@@ -29,6 +30,10 @@ export class ProjectBudget {
   @Column({ name: 'reserved_amount', type: 'numeric', precision: 14, scale: 2, default: 0 })
   reservedAmount: string;
 
+  // 变更单提交审批时预占的额度；草稿不占，驳回/作废释放，审批通过后并入总额
+  @Column({ name: 'occupied_amount', type: 'numeric', precision: 14, scale: 2, default: 0 })
+  occupiedAmount: string;
+
   @Column({ type: 'enum', enum: Currency, default: Currency.CNY })
   currency: Currency;
 
@@ -46,6 +51,9 @@ export class ProjectBudget {
 
   @OneToMany(() => CostItem, (costItem) => costItem.budget)
   costItems: CostItem[];
+
+  @OneToMany(() => ChangeOrder, (changeOrder) => changeOrder.budget)
+  changeOrders: ChangeOrder[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

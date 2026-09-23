@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CostReport } from '../models/costReport.entity';
 import { ProjectBudget } from '../models/budget.entity';
-import { AuditAction, ReportPeriod, ReportType } from '../types/enums';
+import { AuditAction, BudgetStatus, ReportPeriod, ReportType } from '../types/enums';
 import { RequestContext } from '../types/interfaces';
 import { AuditLogService } from './auditLog.service';
 import { AnalyticsService } from './analytics.service';
@@ -44,10 +44,11 @@ export class ReportService {
     }
 
     const budgets = await this.budgetRepository.find({
-      where: { projectId: input.projectId },
+      where: { projectId: input.projectId, status: BudgetStatus.Approved },
       relations: ['costItems']
     });
     const costItems = budgets.flatMap((budget) => budget.costItems);
+    // 仅统计已审批预算；审批通过的变更金额已并入 totalAmount，即按调整后预算计算
     const approvedBudgetTotal = budgets.reduce((sum, budget) => sum + Number(budget.totalAmount), 0);
     const summary = this.analyticsService.summarize(costItems, approvedBudgetTotal);
 
